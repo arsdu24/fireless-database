@@ -1,4 +1,8 @@
-import { AbstractModule, AbstractStream } from '@fireless/core';
+import {
+  AbstractModule,
+  AbstractStream,
+  rewriteProvider,
+} from '@fireless/core';
 import {
   DatabaseControllerHandlerOptions,
   DataBaseControllerOptions,
@@ -10,7 +14,6 @@ import { Subject } from 'rxjs';
 import { DatabaseDriver } from './database-driver';
 import { EntityManager } from './entity-manager';
 import { DatabaseStream } from './stream';
-import { rewriteProvider } from '@fireless/core/src';
 
 export class DatabaseModule extends AbstractModule<
   DatabaseModuleOptions,
