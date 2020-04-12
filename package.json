@@ -1,8 +1,13 @@
 {
   "name": "@fireless/database",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "FireLess database provider package",
   "main": "index.js",
+  "files": [
+    "dist",
+    "index.js",
+    "index.d.ts"
+  ],
   "scripts": {
     "build": "rm -rf ./dist && tsc",
     "format": "prettier --write \"(src|test)/**/*.ts\"",
@@ -40,8 +45,8 @@
     "lodash": "^4.17"
   },
   "devDependencies": {
-    "@fireless/core": "^0.0.3",
-    "@fireless/common": "^0.0.1",
+    "@fireless/core": "^0.0",
+    "@fireless/common": "^0.0",
     "@types/jest": "^25.2.1",
     "@types/lodash": "^4.14.149",
     "@types/mongodb": "^3.5.5",
