@@ -17,7 +17,7 @@ type DecoratorOptions = {
   controllers: Class<any>[];
 };
 
-export function DBModule(options: DecoratorOptions): ConstructorDecorator {
+export function Module(options: DecoratorOptions): ConstructorDecorator {
   return <T extends {}>(Target: Class<T>): Class<T> => {
     setModuleContextOptions<
       DatabaseModuleOptions,

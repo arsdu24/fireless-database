@@ -1,135 +1,65 @@
 import {
   asyncResolverFromTransformPipes,
-  ControllerHandlerParamDecorator,
+  createPipedHandlerParamDecorator,
   createTransformPipe,
+  PipedDecorator,
+  PipedHandlerParamDecoratorCreatorOptions,
   setControllerHandlerContextParamResolver,
   TransformPipe,
 } from '@fireless/common';
-import { AsyncResolver } from '@fireless/core';
 import {
   DatabaseControllerHandlerOptions,
   DataBaseControllerOptions,
   DatabaseEvents,
+  EntityEventTypesEnum,
 } from '../types';
 import { Class } from 'utility-types';
 
-export function Doc(): ControllerHandlerParamDecorator;
-export function Doc<E extends {}, R>(
-  p: Class<TransformPipe<E, R>>,
-): ControllerHandlerParamDecorator;
-export function Doc<E extends {}, R1, R2>(
-  p1: Class<TransformPipe<E, R1>>,
-  p2: Class<TransformPipe<R1, R2>>,
-): ControllerHandlerParamDecorator;
-export function Doc<E extends {}, R1, R2, R3>(
-  p1: Class<TransformPipe<E, R1>>,
-  p2: Class<TransformPipe<R1, R2>>,
-  p3: Class<TransformPipe<R2, R3>>,
-): ControllerHandlerParamDecorator;
-export function Doc<E extends {}, R1, R2, R3, R4>(
-  p1: Class<TransformPipe<E, R1>>,
-  p2: Class<TransformPipe<R1, R2>>,
-  p3: Class<TransformPipe<R2, R3>>,
-  p4: Class<TransformPipe<R3, R4>>,
-): ControllerHandlerParamDecorator;
-export function Doc<E extends {}, R1, R2, R3, R4, R5>(
-  p1: Class<TransformPipe<E, R1>>,
-  p2: Class<TransformPipe<R1, R2>>,
-  p3: Class<TransformPipe<R2, R3>>,
-  p4: Class<TransformPipe<R3, R4>>,
-  p5: Class<TransformPipe<R4, R5>>,
-): ControllerHandlerParamDecorator;
-export function Doc<E extends {} = any>(
-  ...pipes: Class<TransformPipe<any, any>>[]
-): ControllerHandlerParamDecorator {
+function registerParamResolver<E extends {}>(
+  pipes: Class<TransformPipe<any, any>>[],
+) {
   return <T extends {}>(
     target: T,
     methodName: keyof T,
     index: number,
   ): void => {
-    const resolver: AsyncResolver<
-      DatabaseEvents<E>,
-      any
-    > = asyncResolverFromTransformPipes(
-      createTransformPipe<DatabaseEvents<E>, E>(
-        async ({ entity }: DatabaseEvents<E>) => entity,
-      ),
-      ...pipes,
-    );
-
     setControllerHandlerContextParamResolver<
       T,
       DataBaseControllerOptions<E>,
       DatabaseEvents<E>,
       DatabaseControllerHandlerOptions<E>
-    >(target.constructor as Class<T>, methodName, index, resolver);
+    >(
+      target.constructor as Class<T>,
+      methodName,
+      index,
+      asyncResolverFromTransformPipes(...pipes),
+    );
   };
 }
 
-export function DocProp<E extends {}, K extends keyof E>(
-  o: E,
-  key: K,
-): ControllerHandlerParamDecorator;
-export function DocProp<E extends {}, K extends keyof E, R>(
-  o: E,
-  key: K,
-  p: Class<TransformPipe<E[K], R>>,
-): ControllerHandlerParamDecorator;
-export function DocProp<E extends {}, K extends keyof E, R1, R2>(
-  o: E,
-  key: K,
-  p1: Class<TransformPipe<E[K], R1>>,
-  p2: Class<TransformPipe<R1, R2>>,
-): ControllerHandlerParamDecorator;
-export function DocProp<E extends {}, K extends keyof E, R1, R2, R3>(
-  o: E,
-  key: K,
-  p1: Class<TransformPipe<E[K], R1>>,
-  p2: Class<TransformPipe<R1, R2>>,
-  p3: Class<TransformPipe<R2, R3>>,
-): ControllerHandlerParamDecorator;
-export function DocProp<E extends {}, K extends keyof E, R1, R2, R3, R4>(
-  o: E,
-  key: K,
-  p1: Class<TransformPipe<E[K], R1>>,
-  p2: Class<TransformPipe<R1, R2>>,
-  p3: Class<TransformPipe<R2, R3>>,
-  p4: Class<TransformPipe<R3, R4>>,
-): ControllerHandlerParamDecorator;
-export function DocProp<E extends {}, K extends keyof E, R1, R2, R3, R4, R5>(
-  o: E,
-  key: K,
-  p1: Class<TransformPipe<E[K], R1>>,
-  p2: Class<TransformPipe<R1, R2>>,
-  p3: Class<TransformPipe<R2, R3>>,
-  p4: Class<TransformPipe<R3, R4>>,
-  p5: Class<TransformPipe<R4, R5>>,
-): ControllerHandlerParamDecorator;
-export function DocProp<E extends {}, K extends keyof E = any>(
-  o: E,
-  key: K,
-  ...pipes: Class<TransformPipe<any, any>>[]
-): ControllerHandlerParamDecorator {
-  return <T extends {}>(
-    target: T,
-    methodName: keyof T,
-    index: number,
-  ): void => {
-    const resolver: AsyncResolver<
-      DatabaseEvents<E>,
-      any
-    > = asyncResolverFromTransformPipes(
-      createTransformPipe<DatabaseEvents<E>, E[K]>(
-        async ({ entity }: DatabaseEvents<E>) => entity[key],
-      ),
-      ...pipes,
-    );
-
-    setControllerHandlerContextParamResolver<
-      T,
-      DataBaseControllerOptions<E>,
-      DatabaseEvents<E>,
-      DatabaseControllerHandlerOptions<E>
-    >(target.constructor as Class<T>, methodName, index, resolver);
+export function Event<E extends {}>() {
+  return {
+    EntityType: (...pipes: Class<TransformPipe<any, any>>[]) =>
+      registerParamResolver<Class<E>>([
+        createTransformPipe(
+          async (event: DatabaseEvents<E>) => event.entityType,
+        ),
+        ...pipes,
+      ]) as PipedDecorator<Class<E>>,
+    Type: (...pipes: Class<TransformPipe<any, any>>[]) =>
+      registerParamResolver<EntityEventTypesEnum>([
+        createTransformPipe(async (event: DatabaseEvents<E>) => event.type),
+        ...pipes,
+      ]) as PipedDecorator<EntityEventTypesEnum>,
+    Entity: createPipedHandlerParamDecorator<E>(
+      (options: PipedHandlerParamDecoratorCreatorOptions<E>) => {
+        return registerParamResolver<E>([
+          createTransformPipe(async (event: DatabaseEvents<E>) =>
+            options.key ? event.entity[options.key] : event.entity,
+          ),
+          ...options.pipes,
+        ]);
+      },
+    ),
   };
 }

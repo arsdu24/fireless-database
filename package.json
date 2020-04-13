@@ -1,6 +1,6 @@
 {
   "name": "@fireless/database",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "FireLess database provider package",
   "main": "index.js",
   "files": [
@@ -15,7 +15,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "prepublish": "npm run build"
+    "prepublishOnly": "npm run build"
   },
   "repository": {
     "type": "git",

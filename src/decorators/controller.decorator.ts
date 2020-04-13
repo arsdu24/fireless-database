@@ -6,7 +6,7 @@ import {
 import { Class } from 'utility-types';
 import { setControllerContextOptions } from '@fireless/common';
 
-export function EntityController<E extends {}>(Entity: Class<E>) {
+export function Controller<E extends {}>(Entity: Class<E>) {
   return <T extends {}>(Constructor: Class<T>): Class<T> => {
     setControllerContextOptions<
       T,
