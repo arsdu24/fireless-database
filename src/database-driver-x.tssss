@@ -1,4 +1,4 @@
-import { Collection, Db, ObjectID } from 'mongodb';
+import { Collection, ObjectID } from 'mongodb';
 import { Subject } from 'rxjs';
 import {
   BaseEntity,
@@ -19,18 +19,23 @@ import {
   UpdateQuery,
   UpdateWriteOpResult,
 } from './types';
-import { EntitySchema } from './entity-schema';
+import { EntitySchema } from './schema';
 
-export class DatabaseDriver {
+export class DatabaseDriver<O extends {}> {
   constructor(
-    private db: Db,
+    private options: O,
     private changeStream: Subject<DatabaseEvents<any>>,
+    private resource?: string
   ) {}
+
+  createScopedDriver(resource: string): DatabaseDriver<O> {
+    return new DatabaseDriver()
+  }
 
   getSchemaCollection<T extends BaseEntity, X>(
     schema: EntitySchema<T>,
   ): Collection {
-    return this.db.collection(schema.getCollectionName());
+    return this.db.collection(schema.getResource());
   }
 
   wrapFilterId<T extends BaseEntity, F extends FilterQuery<T>>(filter: F): F {
@@ -59,7 +64,7 @@ export class DatabaseDriver {
       return void 0;
     }
 
-    return schema.plainToClass(result);
+    return schema.parse(result);
   }
 
   async find<T extends BaseEntity, O, X>(
@@ -71,7 +76,7 @@ export class DatabaseDriver {
       .find(this.wrapFilterId(filter), options)
       .toArray();
 
-    return result.map((plain) => schema.plainToClass(plain));
+    return result.map((plain) => schema.parse(plain));
   }
 
   async count<T extends BaseEntity, O>(

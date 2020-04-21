@@ -1,8 +1,8 @@
+import { Entity, PrimaryKey, ForeignKey, Property } from './entity';
+import { HasOne } from './relations';
 import { Controller } from './controller.decorator';
 import { OnCreate, OnDelete, OnUpdate } from './controller-handler.decorator';
 import { Event } from './controller-handler-param.decorator';
-import { Entity } from './entity.decorator';
-import { Column } from './entity-prop.decorator';
 import { Module } from './module.decorator';
 
 export {
@@ -13,7 +13,10 @@ export {
   OnCreate,
   OnUpdate,
   OnDelete,
-  Column,
+  Property,
+  PrimaryKey,
+  ForeignKey,
+  HasOne,
 };
 
 export const DB = Object.seal({
@@ -24,5 +27,8 @@ export const DB = Object.seal({
   OnCreate,
   OnUpdate,
   OnDelete,
-  Column,
+  Property,
+  PrimaryKey,
+  ForeignKey,
+  HasOne,
 });

@@ -1,28 +1,23 @@
-import {
-  AbstractModule,
-  AbstractStream,
-  rewriteProvider,
-} from '@fireless/core';
+import { AbstractModule, AbstractStream } from '@fireless/core';
 import {
   DatabaseControllerHandlerOptions,
   DataBaseControllerOptions,
   DatabaseEvents,
   DatabaseModuleOptions,
 } from './types';
-import { MongoClient } from 'mongodb';
 import { Subject } from 'rxjs';
-import { DatabaseDriver } from './database-driver';
-import { EntityManager } from './entity-manager';
 import { DatabaseStream } from './stream';
+import { Class } from 'utility-types';
+import { EntitySchema, EntitySchemaRegistry } from './schema';
 
-export class DatabaseModule extends AbstractModule<
-  DatabaseModuleOptions,
+export class DatabaseModule<O extends {}> extends AbstractModule<
+  DatabaseModuleOptions<O>,
   DatabaseEvents<any>,
   DataBaseControllerOptions<any>,
   DatabaseControllerHandlerOptions<any>
 > {
   async createStream(
-    options: DatabaseModuleOptions,
+    options: DatabaseModuleOptions<O>,
   ): Promise<
     AbstractStream<
       DatabaseEvents<any>,
@@ -30,18 +25,26 @@ export class DatabaseModule extends AbstractModule<
       DatabaseControllerHandlerOptions<any>
     >
   > {
-    const { uri = '', ...rest } = options;
-    const client = await MongoClient.connect(uri, {
-      ...rest,
-      useUnifiedTopology: true,
-    });
-    const db = await client.db(options.database);
     const subject: Subject<DatabaseEvents<any>> = new Subject();
-    const databaseDriver = new DatabaseDriver(db, subject);
-    const entityManager = new EntityManager(databaseDriver);
+    const databaseDriver = new options.driver(options.driverOptions, subject);
 
-    rewriteProvider(DatabaseDriver, databaseDriver);
-    rewriteProvider(EntityManager, entityManager);
+    await databaseDriver.connect();
+
+    options.entities
+      .map(
+        <T extends {}>(entity: Class<T>): EntitySchema<T> => {
+          if (!EntitySchemaRegistry.getInstance().hasEntitySchema(entity)) {
+            throw new Error(
+              `Entity '${entity.name}' should be decorated with @Entity decorator imported from @fireless/database package`,
+            );
+          }
+
+          return EntitySchemaRegistry.getInstance().getEntitySchema(entity);
+        },
+      )
+      .forEach((schema: EntitySchema<any>) => {
+        schema.useDatabaseDriver(databaseDriver);
+      });
 
     return new DatabaseStream(subject.asObservable());
   }

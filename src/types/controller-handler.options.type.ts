@@ -1,4 +1,4 @@
-import { DatabaseEvents, EntityEventTypesEnum } from './event';
+import { DatabaseEvents, EntityEventTypesEnum } from './event.type';
 
 export interface DatabaseControllerHandlerOptions<T extends {}> {
   type?: EntityEventTypesEnum;

@@ -12,26 +12,30 @@ import {
 } from '@fireless/common';
 import { DatabaseModule } from '../module';
 
-type DecoratorOptions = {
-  options: DatabaseModuleOptions;
+type DecoratorOptions<T extends {}> = DatabaseModuleOptions<T> & {
+  entities: Class<any>[];
   controllers: Class<any>[];
 };
 
-export function Module(options: DecoratorOptions): ConstructorDecorator {
+export function Module<O extends {}>(
+  options: DecoratorOptions<O>,
+): ConstructorDecorator {
   return <T extends {}>(Target: Class<T>): Class<T> => {
+    const { controllers, ...dbOptions } = options;
+
     setModuleContextOptions<
-      DatabaseModuleOptions,
+      DatabaseModuleOptions<O>,
       DatabaseEvents<any>,
       DataBaseControllerOptions<any>,
       DatabaseControllerHandlerOptions<any>
-    >(Target, DatabaseModule, options.options);
+    >(Target, DatabaseModule, dbOptions);
 
     setModuleContextControllers<
-      DatabaseModuleOptions,
+      DatabaseModuleOptions<O>,
       DatabaseEvents<any>,
       DataBaseControllerOptions<any>,
       DatabaseControllerHandlerOptions<any>
-    >(Target, DatabaseModule, options.controllers);
+    >(Target, DatabaseModule, controllers);
 
     return Target;
   };
